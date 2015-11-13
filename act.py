@@ -1,29 +1,24 @@
-import app
-import SimulationItemFactory as sf
+import flask_app
+from StoredItemPrototype import StoredUserPrototype, StoredBookPrototype
+from SimulationSingleton import Simulation
+from common_logger import log
 
-#### Step 1: create random users and their books
+#### Step 1: create random exchange points, users and their books
 
-simulation_factory = sf.SimulationItemFactory()
+simulation = Simulation(users_count=3, max_books_per_user=3, exchange_points_count=5)
+simulation.generate_items()
 
-items_count = 10
+# Save generated objects to persistent storage
+# Convert models for simulation into models for ORM
 
-books = []
-users = []
+for sim_user in simulation.all_users:
+    stored_user = StoredUserPrototype(sim_user).clone()
+    flask_app.db.session.add(stored_user)
 
+for sim_book in simulation.all_books:
+    stored_book = StoredBookPrototype(sim_book).clone()
+    flask_app.db.session.add(stored_book)
 
-for i in range(items_count):
+# app.db.session.commit()
 
-    simulation_book = simulation_factory.create_simulation_item('book')
-    books.append(simulation_book)
-
-
-    simulation_user = simulation_factory.create_simulation_item('user')
-    users.append(simulation_user)
-
-
-for sim_book in books:
-    stored_book = app.StoredBook(title=sim_book.title)
-    app.db.session.add(stored_book)
-
-
-app.db.session.commit()
+log(simulation)

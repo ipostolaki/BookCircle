@@ -4,27 +4,27 @@ from flask.ext.script import Manager
 from flask.ext.migrate import Migrate, MigrateCommand
 
 
-app = Flask(__name__)
-app.secret_key = 'fhdjksfh7h38h3489fh3489fh3489hf938h'
+flask_app = Flask(__name__)
+flask_app.secret_key = 'fhdjksfh7h38h3489fh3489fh3489hf938h'
 
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://ipostolaki@localhost/Books'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///books.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+flask_app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///books.db'
+flask_app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-db = SQLAlchemy(app)
-migrate = Migrate(app, db)
+db = SQLAlchemy(flask_app)
+migrate = Migrate(flask_app, db)
 
-manager = Manager(app)
+manager = Manager(flask_app)
 manager.add_command('db', MigrateCommand)
 
 
-@app.route('/')
+@flask_app.route('/')
 def index():
-    return 'Hi there'
+    return 'This flask app will be used to view simulation data stored in database'
 
 
 
-#### Models
+#### ORM Storage Models
 
 class StoredBook(db.Model):
     id = db.Column(db.Integer, primary_key=True)

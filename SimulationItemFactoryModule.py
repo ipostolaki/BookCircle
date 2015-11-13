@@ -19,6 +19,9 @@ class AbstractSimulationItemFactory(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def create_simulation_item(self):
+        '''
+        The Factory Method for items production
+        '''
         pass
 
     @abc.abstractmethod
@@ -41,8 +44,14 @@ class SimulationItemFactory(AbstractSimulationItemFactory):
     def create_simulation_user(self):
         return SimulationUser(name=self.get_simulation_user_name())
 
+    def create_simulation_exchange_point(self):
+        return  SimulationExchangePoint(address=self.get_simulation_exchange_point_address())
+
     def get_simulation_book_title(self):
         return fake.sentence(nb_words=3)
+
+    def get_simulation_exchange_point_address(self):
+        return fake.address()
 
     def get_simulation_user_name(self):
         return fake.name()
@@ -52,6 +61,8 @@ class SimulationItemFactory(AbstractSimulationItemFactory):
             return self.create_simulation_book()
         if kind == 'user':
             return self.create_simulation_user()
+        if kind == 'point':
+            return self.create_simulation_exchange_point()
 
 
 class SimulationBookInterface(metaclass=abc.ABCMeta):
@@ -61,6 +72,10 @@ class SimulationBookInterface(metaclass=abc.ABCMeta):
         pass
 
 class SimulationUserInterface:
+    ''' Assume interface is there '''
+    pass
+
+class SimulationExchangePointInterface:
     ''' Assume interface is there '''
     pass
 
@@ -85,3 +100,23 @@ class SimulationUser:
     def __init__(self, name):
         log('Instantiated simulation User with name "%s"' %name)
         self.name = name
+        self._own_books = []
+        self.rating = 1
+
+    @property
+    def own_books(self):
+        # log('User\'s \'%s\' books accessed' % self.name)
+        return self._own_books
+
+    @own_books.setter
+    def own_books(self, value):
+        # log('User\'s \'%s\' books setted' % self.name)
+        self._own_books = value
+
+
+class SimulationExchangePoint(SimulationExchangePointInterface):
+    ''' Respresentation of shared physical space where users can exchange their books '''
+
+    def __init__(self, address):
+        log('Instantiated simulation Exchange Point with address "%s"' %address)
+        self.address = address
