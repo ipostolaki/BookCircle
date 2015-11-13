@@ -20,27 +20,25 @@ manager.add_command('db', MigrateCommand)
 
 @app.route('/')
 def index():
-    pass
-
     return 'Hi there'
 
 
 
 #### Models
 
-class Book(db.Model):
+class StoredBook(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(80))
 
-    owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    holder_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    owner_id = db.Column(db.Integer, db.ForeignKey('stored_user.id'))
+    holder_id = db.Column(db.Integer, db.ForeignKey('stored_user.id'))
 
 
-class User(db.Model):
+class StoredUser(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True)
-    own_books = db.relationship(Book, backref='owner', lazy='dynamic', foreign_keys=[Book.owner_id])
-    holded_books = db.relationship(Book, backref='holder', lazy='dynamic', foreign_keys=[Book.holder_id])
+    own_books = db.relationship(StoredBook, backref='owner', lazy='dynamic', foreign_keys=[StoredBook.owner_id])
+    holded_books = db.relationship(StoredBook, backref='holder', lazy='dynamic', foreign_keys=[StoredBook.holder_id])
 
 
 
