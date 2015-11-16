@@ -1,6 +1,7 @@
 # BookCircle
 #### Model of book sharing network written in Python applying GOF patterns
 
+###### Python 3.5 required
 
 ## Участник
 - Участник сети – человек который может одолжить книгу у кого-то или кому-то.

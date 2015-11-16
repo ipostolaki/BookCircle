@@ -44,8 +44,8 @@ class SimulationItemFactory(AbstractSimulationItemFactory):
     def create_simulation_user(self):
         return SimulationUser(name=self.get_simulation_user_name())
 
-    def create_simulation_exchange_point(self):
-        return  SimulationExchangePoint(address=self.get_simulation_exchange_point_address())
+    def create_simulation_exchange_point(self, point_capacity=None):
+        return SimulationExchangePoint(address=self.get_simulation_exchange_point_address(), point_capacity=point_capacity)
 
     def get_simulation_book_title(self):
         return fake.sentence(nb_words=3)
@@ -71,20 +71,29 @@ class SimulationBookInterface(metaclass=abc.ABCMeta):
     def title(self):
         pass
 
+
 class SimulationUserInterface:
     ''' Assume interface is there '''
     pass
 
-class SimulationExchangePointInterface:
-    ''' Assume interface is there '''
-    pass
+
+class SimulationExchangePointInterface(metaclass=abc.ABCMeta):
+
+    @abc.abstractmethod
+    def put_book(self):
+        pass
+
+    @abc.abstractmethod
+    def get_book(self):
+        pass
 
 
 class SimulationBook(SimulationBookInterface):
 
-    def __init__(self, title):
+    def __init__(self, title, owner=None):
         log('Instantiated simulation Book with title "%s"' %title)
         self._title = title
+        self.owner = owner
 
     @property
     def title(self):
@@ -117,6 +126,62 @@ class SimulationUser:
 class SimulationExchangePoint(SimulationExchangePointInterface):
     ''' Respresentation of shared physical space where users can exchange their books '''
 
-    def __init__(self, address):
-        log('Instantiated simulation Exchange Point with address "%s"' %address)
+    default_capacity = 10
+
+    def __init__(self, address, point_capacity=None):
         self.address = address
+        self.stored_books = []
+        self.capacity = point_capacity or SimulationExchangePoint.default_capacity
+        self.successor = None
+
+        log('Instantiated simulation Exchange Point with address "%s" and capacity %i'\
+            %(address, self.capacity))
+
+    def put_book(self, book):
+        self.stored_books.append(book)
+
+    def get_book(self):
+        return self.stored_books.pop()
+
+    def set_successor(self, successor):
+        self.successor = successor
+
+
+class ExchangePointProxyInterface(SimulationExchangePointInterface, metaclass=abc.ABCMeta):
+    pass
+
+
+class ExchangePointProxy(ExchangePointProxyInterface):
+
+    # Pattern: Proxy
+
+    def __init__(self, proxied_point):
+        self.proxied_point = proxied_point
+
+    def get_book(self):
+        if self.proxied_point.stored_books:
+            return self.proxied_point.stored_books.pop()
+
+    def put_book(self, book):
+
+        # Pattern: Chain of Responsibility
+
+        if self.point_is_not_full():
+            self.proxied_point.put_book(book)
+        else:
+            successor_point = self.proxied_point.successor
+
+            log('Trying exchange point successor %s' %successor_point)
+
+            if successor_point:
+                self.proxied_point = successor_point
+                self.put_book(book)
+            else:
+                raise Exception("Can't add book %s, whole chain of exchange points is full." % book)
+
+    def point_is_not_full(self):
+        return self.proxied_point.capacity > len(self.proxied_point.stored_books)
+
+    @property
+    def stored_books(self):
+        return self.proxied_point.stored_books

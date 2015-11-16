@@ -3,10 +3,16 @@ from StoredItemPrototype import StoredUserPrototype, StoredBookPrototype
 from SimulationSingleton import Simulation
 from common_logger import log
 
-#### Step 1: create random exchange points, users and their books
+import TransactionsLogic
 
-simulation = Simulation(users_count=3, max_books_per_user=3, exchange_points_count=5)
+#### Step 1: Create random exchange points, users and their books
+
+simulation = Simulation(users_count=2, max_books_per_user=2, exchange_points_count=3)
 simulation.generate_items()
+
+#### Step 2: Owners giving their books to Exchange Points
+
+TransactionsLogic.move_books_from_owners_to_points()
 
 # Save generated objects to persistent storage
 # Convert models for simulation into models for ORM

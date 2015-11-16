@@ -1,8 +1,9 @@
 import unittest
 
-from SimulationItemFactoryModule import SimulationItemFactory
+from SimulationItemFactoryModule import SimulationItemFactory, ExchangePointProxy
 from StoredItemPrototype import StoredUserPrototype, StoredBookPrototype
 from SimulationSingleton import Simulation
+import TransactionsLogic
 
 
 simulation_item_factory = SimulationItemFactory()
@@ -32,6 +33,16 @@ class SimulationUserTests(unittest.TestCase):
         sim_user.own_books = books_list
 
         self.assertTrue(sim_book in sim_user.own_books)
+
+
+class SimulationBookTests(unittest.TestCase):
+
+    def test_owning(self):
+        test_user = simulation_item_factory.create_simulation_user()
+        test_book = simulation_item_factory.create_simulation_book()
+        test_book.owner = test_user
+
+        self.assertEqual(test_book.owner, test_user)
         
         
 class SimulationTests(unittest.TestCase):
@@ -60,6 +71,76 @@ class SimulationExchangePointTests(unittest.TestCase):
         exchange_point =  simulation_item_factory.create_simulation_exchange_point()
         self.assertTrue(exchange_point.address)
 
+    def test_put_get_book(self):
+        exchange_point = simulation_item_factory.create_simulation_exchange_point()
+
+        book = simulation_item_factory.create_simulation_book()
+        exchange_point.put_book(book)
+        self.assertTrue(len(exchange_point.stored_books) == 1)
+
+        gotten_book = exchange_point.get_book()
+        self.assertEqual(gotten_book , book)
+        self.assertTrue(len(exchange_point.stored_books) == 0)
+
+
+class ExchangePointProxyTests(unittest.TestCase):
+
+    def test_points_chaining(self):
+        sim = Simulation(users_count=2, max_books_per_user=2, exchange_points_count=3)
+        sim.exchange_point_capacity = 5
+        sim.generate_items()
+        test_point = sim.get_last_exchange_point()
+
+        for _ in range(0,15):
+            test_point.put_book(simulation_item_factory.create_simulation_book())
+
+        for point in sim.all_exchange_points:
+            self.assertTrue(len(point.stored_books)>0)
+
+
+    def test_put_get_book(self):
+        exchange_point = simulation_item_factory.create_simulation_exchange_point()
+        point_proxy = ExchangePointProxy(proxied_point=exchange_point)
+
+        book = simulation_item_factory.create_simulation_book()
+        point_proxy.put_book(book)
+        self.assertTrue(len(point_proxy.proxied_point.stored_books) == 1)
+
+        gotten_book = point_proxy.get_book()
+        self.assertEqual(gotten_book , book)
+        self.assertTrue(len(point_proxy.proxied_point.stored_books) == 0)
+
+
+    def test_full_point(self):
+        exchange_point = simulation_item_factory.create_simulation_exchange_point()
+        point_proxy = ExchangePointProxy(proxied_point=exchange_point)
+
+        point_proxy.capacity = 10
+
+        books_pool = [simulation_item_factory.create_simulation_book() for book in range(0, int(point_proxy.capacity/2))]
+
+        for book in books_pool:
+            point_proxy.put_book(book)
+
+        self.assertTrue(point_proxy.point_is_not_full())
+
+
+class TransactionsTests(unittest.TestCase):
+
+    def test_otp_execution(self):
+        simulation = Simulation(users_count=2, max_books_per_user=2, exchange_points_count=1)
+        simulation.generate_items()
+
+        TransactionsLogic.move_books_from_owners_to_points()
+
+        point = simulation.get_last_exchange_point()
+
+        self.assertTrue(len(point.stored_books) > 0)  # point received some books as result of transaction
+
+        moved_book = point.stored_books[0]
+        one_user = simulation.all_users[0]
+
+        self.assertTrue(moved_book not in one_user.own_books)  # user has no book which is moved to exchange point
 
 
 
