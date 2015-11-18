@@ -1,11 +1,16 @@
 import unittest
 
+from common_logger import log
 from SimulationItems import SimulationItemFactory, ExchangePointProxy, PublicLibraryAdapter, PublicLibrary
 from StoredItemPrototype import StoredUserPrototype, StoredBookPrototype
 from SimulationSingleton import Simulation
 import TransactionsLogic
 from BaseClasses.ObserverBaseClasses import ObserverBase
 from BaseClasses.Resourse import ComputerResource, ComputerResourceImplementor, BookResource, BookResourceImplementor
+from BookCircleFacade import BookCircle
+from BaseClasses.Composite import ExchangePointsHierarchyComposite, ExchangePointsHierarchyLeaf
+from BaseClasses import SimulationState, Mediator
+
 
 simulation_item_factory = SimulationItemFactory()
 
@@ -132,7 +137,7 @@ class TransactionsTests(unittest.TestCase):
         simulation = Simulation(users_count=2, max_books_per_user=2, exchange_points_count=1)
         simulation.generate_items()
 
-        TransactionsLogic.move_books_from_owners_to_points()
+        TransactionsLogic.move_books_from_owners_to_points(simulation)
 
         point = simulation.get_last_exchange_point()
 
@@ -189,10 +194,10 @@ class BridgeTests(unittest.TestCase):
     def test_resources(self):
 
         book_implementor = BookResourceImplementor()
-        book = BookResource(implementor=book_implementor, title='Книга про UTF8', owner='User X')
+        book = BookResource(implementor=book_implementor, title='Книга про UTF8', owner='Python3 User')
 
         book_description = book.get_resource_description()
-        print(book_description)
+        log(book_description)
 
         self.assertTrue(len(book_description)>0)
         self.assertTrue(book.implementor == book_implementor)
@@ -202,13 +207,13 @@ class BridgeTests(unittest.TestCase):
         computer = ComputerResource(model='BRDG3', vendor='Pattern Computers', implementor=computer_implementor)
 
         computer_description = computer.get_resource_description()
-        print(computer_description)
+        log(computer_description)
 
         self.assertTrue(len(computer_description)>0)
         self.assertTrue(computer.implementor == computer_implementor)
 
 
-from BaseClasses.Composite import ExchangePointsHierarchyComposite, ExchangePointsHierarchyLeaf
+
 
 class CompositeTests(unittest.TestCase):
 
@@ -249,18 +254,46 @@ class CompositeTests(unittest.TestCase):
         # Pattern: Composite
         # Different components of hierarchy using same interface and able to be accessed with the same method
 
-        print(points_of_country.get_subordinated_books_count())
-        print(all_points_of_city_A.get_subordinated_books_count())
-        print(all_points_of_city_B.get_subordinated_books_count())
-        print(one_leaf_point_in_city_B.get_subordinated_books_count())
-
-        
+        log(points_of_country.get_subordinated_books_count())
+        log(all_points_of_city_A.get_subordinated_books_count())
+        log(all_points_of_city_B.get_subordinated_books_count())
+        log(one_leaf_point_in_city_B.get_subordinated_books_count())
 
 
+class StateTests(unittest.TestCase):
+
+    def test_simulation_state(self):
+
+        book_circle = BookCircle()
+        book_circle.create_simulation(users_count=2, max_books_per_user=3, exchange_points_count=5)
+
+        self.assertEqual(type(book_circle.simulation.state), type(SimulationState.ReadyToRunState()))
+
+        book_circle.run_simulation()
+
+        self.assertEqual(type(book_circle.simulation.state), type(SimulationState.ExecutedSimulationState()))
 
 
+class MediatorTests(unittest.TestCase):
 
+    def test_users_mediation(self):
 
+        # simulation inherit MediatorMixin
+        simulation = Simulation(users_count=2, max_books_per_user=2, exchange_points_count=1)
+        simulation.generate_items()
+
+        # each user inherit ColleagueMixin
+        for user in simulation.all_users:
+            user.set_mediator(simulation)
+
+        simulation.broadcast_message_to_colleagues('Broadcasted message')
+
+        user_colleague = simulation.all_users[0]
+
+        user_colleague.send_message_to_mediator('new message')
+
+        self.assertEqual(user_colleague.mediator, simulation)
+        self.assertTrue(user_colleague in simulation.colleagues)
 
 if __name__ == "__main__":
     unittest.main()

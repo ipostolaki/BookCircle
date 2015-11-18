@@ -2,7 +2,7 @@ import abc
 
 from common_logger import log
 from BaseClasses.ObserverBaseClasses import ObservableSubjectBase
-from BaseClasses import Resourse
+from BaseClasses import Mediator
 
 from faker import Faker  # pip package for fake string entities generation
 
@@ -91,7 +91,7 @@ class SimulationExchangePointInterface(metaclass=abc.ABCMeta):
 class SimulationBook(SimulationBookInterface):
 
     def __init__(self, title, owner=None):
-        log('Instantiated simulation Book with title "%s"' %title)
+        log('Instantiated Book with title "%s"' %title)
         self._title = title
         self.owner = owner
 
@@ -103,13 +103,15 @@ class SimulationBook(SimulationBookInterface):
     def title(self, value):
         self._title = value
 
+# Pattern: Mediator
+# Pattern: Observer
 
-class SimulationUser(SimulationUserInterface, ObservableSubjectBase):
+class SimulationUser(SimulationUserInterface, ObservableSubjectBase, Mediator.ColleagueMixin):
 
     NotificationUserGiveBook = 'NotificationUserGiveBook'
 
     def __init__(self, name):
-        log('Instantiated simulation User with name "%s"' %name)
+        log('Instantiated User with name "%s"' %name)
         self.name = name
         self._own_books = []
         self.rating = 1
@@ -138,7 +140,7 @@ class SimulationExchangePoint(SimulationExchangePointInterface):
         self.capacity = point_capacity or SimulationExchangePoint.default_capacity
         self.successor = None
 
-        log('Instantiated simulation Exchange Point with address "%s" and capacity %i'\
+        log('Instantiated Exchange Point with address "%s" and capacity %i'\
             %(address, self.capacity))
 
     def put_book(self, book):

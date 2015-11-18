@@ -4,8 +4,7 @@ import queue
 from common_logger import log
 from SimulationItems import SimulationItemFactory, ExchangePointProxy, SimulationUser
 from BaseClasses.ObserverBaseClasses import ObserverBase
-import TransactionsLogic
-
+from BaseClasses import SimulationState, Mediator
 
 simulation_item_factory = SimulationItemFactory()
 
@@ -20,8 +19,9 @@ class Single:
         return "Singleton base class"
 
 # Pattern: Singleton
+# Pattern: Mediator
 
-class Simulation(Single):
+class Simulation(Single, Mediator.MediatorMixin):
     """ Singleton managing simulation and storing process data """
 
     def __init__(self, users_count=None, max_books_per_user=None, exchange_points_count=None):
@@ -44,6 +44,7 @@ class Simulation(Single):
             self.exchange_point_capacity = None
             self.q_otp = queue.Queue()  # otp - from owners to exchange points
             self.persistence_strategy = None
+            self.state = SimulationState.ReadyToRunState()
 
 
     def generate_items(self):
@@ -100,11 +101,12 @@ class Simulation(Single):
             self.persistence_strategy.save_data(self, **args)
 
     def run(self):
-        # Step 1: Create random exchange points, users and their books
-        self.generate_items()
+        print("Run at singleton")
+        # Pattern: State
+        self.state.run(self)
 
-        # Step 2: Owners giving their books to Exchange Points
-        TransactionsLogic.move_books_from_owners_to_points(simulation=self)
+
+
 
 class UserObserver(ObserverBase):
 
