@@ -1,10 +1,11 @@
 import unittest
 
-from SimulationItemFactoryModule import SimulationItemFactory, ExchangePointProxy
+from SimulationItems import SimulationItemFactory, ExchangePointProxy, PublicLibraryAdapter, PublicLibrary
 from StoredItemPrototype import StoredUserPrototype, StoredBookPrototype
 from SimulationSingleton import Simulation
 import TransactionsLogic
-
+from BaseClasses.ObserverBaseClasses import ObserverBase
+from BaseClasses.Resourse import ComputerResource, ComputerResourceImplementor, BookResource, BookResourceImplementor
 
 simulation_item_factory = SimulationItemFactory()
 
@@ -49,8 +50,8 @@ class SimulationTests(unittest.TestCase):
 
     def test_simulation_singleton(self):
 
-        simulation_a = Simulation(users_count=3, max_books_per_user=3, exchange_points_count=5)
-        simulation_b = Simulation(users_count=3, max_books_per_user=3, exchange_points_count=5)
+        simulation_a = Simulation()
+        simulation_b = Simulation()
 
         simulation_a.common_data = 'test data'
 
@@ -141,6 +142,121 @@ class TransactionsTests(unittest.TestCase):
         one_user = simulation.all_users[0]
 
         self.assertTrue(moved_book not in one_user.own_books)  # user has no book which is moved to exchange point
+
+
+class ObserverTests(unittest.TestCase):
+
+    TestNotification = 'TestNotification'
+
+    class UserObserver(ObserverBase):
+        def notification_received(self, sender, notification):
+            if notification == ObserverTests.TestNotification:
+                sender.observer_setted_test_flag = True
+
+    def test_concrete_observer(self):
+
+        new_user = simulation_item_factory.create_simulation_user()
+        user_observer = ObserverTests.UserObserver()
+
+        new_user.attach(user_observer)
+        new_user.notify(ObserverTests.TestNotification)
+
+        self.assertTrue(new_user.observer_setted_test_flag)
+        self.assertTrue(ObserverTests.TestNotification in user_observer.received_notifications[new_user])
+
+        new_user.detach(user_observer)
+        self.assertTrue(user_observer not in new_user.observers)
+
+
+class AdapterTests(unittest.TestCase):
+
+    def test_public_library_adapter(self):
+
+        lib = PublicLibrary()
+
+        book = simulation_item_factory.create_simulation_book()
+
+        lib_as_exchange_point = PublicLibraryAdapter(adaptee=lib)
+
+        lib_as_exchange_point.put_book(book)
+        gotten_book = lib_as_exchange_point.get_book()
+
+        self.assertTrue(gotten_book, book)
+
+
+class BridgeTests(unittest.TestCase):
+
+    def test_resources(self):
+
+        book_implementor = BookResourceImplementor()
+        book = BookResource(implementor=book_implementor, title='Книга про UTF8', owner='User X')
+
+        book_description = book.get_resource_description()
+        print(book_description)
+
+        self.assertTrue(len(book_description)>0)
+        self.assertTrue(book.implementor == book_implementor)
+
+
+        computer_implementor = ComputerResourceImplementor()
+        computer = ComputerResource(model='BRDG3', vendor='Pattern Computers', implementor=computer_implementor)
+
+        computer_description = computer.get_resource_description()
+        print(computer_description)
+
+        self.assertTrue(len(computer_description)>0)
+        self.assertTrue(computer.implementor == computer_implementor)
+
+
+from BaseClasses.Composite import ExchangePointsHierarchyComposite, ExchangePointsHierarchyLeaf
+
+class CompositeTests(unittest.TestCase):
+
+    def test_composite(self):
+
+        point1 = simulation_item_factory.create_simulation_exchange_point()
+
+        points_of_country = ExchangePointsHierarchyComposite()
+        
+        all_points_of_city_A = ExchangePointsHierarchyComposite()        
+        all_points_of_city_B = ExchangePointsHierarchyComposite()
+        
+        points_of_country.add_child(all_points_of_city_A)
+        points_of_country.add_child(all_points_of_city_B)
+        
+        # Some books at different points in city A
+        for _ in range(0, 3):
+            new_exchange_point = simulation_item_factory.create_simulation_exchange_point()
+            new_book = simulation_item_factory.create_simulation_book()
+            new_exchange_point.put_book(new_book)
+
+            all_points_of_city_A.add_child(ExchangePointsHierarchyLeaf(exchange_point=new_exchange_point))
+            
+    
+        # Some books at different points in city B
+        
+        one_leaf_point_in_city_B = None
+
+        for _ in range(0, 2):
+            new_exchange_point = simulation_item_factory.create_simulation_exchange_point()
+            new_book = simulation_item_factory.create_simulation_book()
+            new_exchange_point.put_book(new_book)
+            
+            one_leaf_point_in_city_B = ExchangePointsHierarchyLeaf(exchange_point=new_exchange_point)
+            
+            all_points_of_city_B.add_child(one_leaf_point_in_city_B)
+
+        # Pattern: Composite
+        # Different components of hierarchy using same interface and able to be accessed with the same method
+
+        print(points_of_country.get_subordinated_books_count())
+        print(all_points_of_city_A.get_subordinated_books_count())
+        print(all_points_of_city_B.get_subordinated_books_count())
+        print(one_leaf_point_in_city_B.get_subordinated_books_count())
+
+        
+
+
 
 
 

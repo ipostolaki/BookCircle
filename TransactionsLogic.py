@@ -1,9 +1,6 @@
 import abc
 
-from SimulationSingleton import Simulation
 from common_logger import log
-
-simulation = Simulation()
 
 
 class Transaction:
@@ -39,11 +36,10 @@ class OTPQueueExecutor(QueueExecutorBase):
         book = transaction.book_to_transmit
 
         transaction.book_destination.put_book(book)
-        owner_books = book.owner.own_books
-        owner_books.pop(owner_books.index(book))
+        book.owner.give_own_book(book)
 
 
-def move_books_from_owners_to_points():
+def move_books_from_owners_to_points(simulation):
 
     users_own_books = []
 

@@ -1,10 +1,10 @@
 import random
 import queue
 
-from abc import ABCMeta
-
 from common_logger import log
-from SimulationItemFactoryModule import SimulationItemFactory, SimulationExchangePointInterface, ExchangePointProxy
+from SimulationItems import SimulationItemFactory, ExchangePointProxy, SimulationUser
+from BaseClasses.ObserverBaseClasses import ObserverBase
+import TransactionsLogic
 
 
 simulation_item_factory = SimulationItemFactory()
@@ -19,8 +19,10 @@ class Single:
     def __str__(self):
         return "Singleton base class"
 
+# Pattern: Singleton
 
 class Simulation(Single):
+    """ Singleton managing simulation and storing process data """
 
     def __init__(self, users_count=None, max_books_per_user=None, exchange_points_count=None):
         # instantiating without args, returns new class instance with the same, shared, namespace
@@ -41,15 +43,19 @@ class Simulation(Single):
             self.exchange_points_count = exchange_points_count
             self.exchange_point_capacity = None
             self.q_otp = queue.Queue()  # otp - from owners to exchange points
+            self.persistence_strategy = None
 
 
     def generate_items(self):
 
         log('Items generation...')
 
+        users_observer = UserObserver()
+
         # generate random users
         for _ in range(self.users_count):
             new_simulation_user = simulation_item_factory.create_simulation_item('user')
+            new_simulation_user.attach(users_observer)  # common observer for all users
             self.all_users.append(new_simulation_user)
             user_books_amount = random.randint(1, self.max_books_per_user)
 
@@ -85,3 +91,24 @@ class Simulation(Single):
     def __str__(self):
         return "Simulation for users_count %i and max_books_per_user %i and exchange_points_count %i. Total Books %i " \
                % (self.users_count, self.max_books_per_user, self.exchange_points_count, len(self.all_books))
+
+    def set_persistence_strategy(self, persistence_strategy):
+        self.persistence_strategy = persistence_strategy
+
+    def save_data(self, **args):
+        if self.persistence_strategy:
+            self.persistence_strategy.save_data(self, **args)
+
+    def run(self):
+        # Step 1: Create random exchange points, users and their books
+        self.generate_items()
+
+        # Step 2: Owners giving their books to Exchange Points
+        TransactionsLogic.move_books_from_owners_to_points(simulation=self)
+
+class UserObserver(ObserverBase):
+
+    def notification_received(self, sender, notification):
+        if notification == SimulationUser.NotificationUserGiveBook:
+            user = sender
+            user.rating += 1

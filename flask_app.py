@@ -45,6 +45,8 @@ class StoredUser(db.Model):
 if __name__ == '__main__':
     manager.run()
 
+
+
     
 
 

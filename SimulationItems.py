@@ -1,5 +1,8 @@
 import abc
+
 from common_logger import log
+from BaseClasses.ObserverBaseClasses import ObservableSubjectBase
+from BaseClasses import Resourse
 
 from faker import Faker  # pip package for fake string entities generation
 
@@ -8,6 +11,8 @@ fake = Faker()
 
 
 class AbstractSimulationItemFactory(metaclass=abc.ABCMeta):
+
+    # Pattern: Abstract Factory
 
     @abc.abstractmethod
     def create_simulation_book(self):
@@ -19,10 +24,7 @@ class AbstractSimulationItemFactory(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def create_simulation_item(self):
-        '''
-        The Factory Method for items production
-        '''
-        pass
+        """ # Pattern: Factory Method """
 
     @abc.abstractmethod
     def get_simulation_book_title(self):
@@ -34,9 +36,7 @@ class AbstractSimulationItemFactory(metaclass=abc.ABCMeta):
 
 
 class SimulationItemFactory(AbstractSimulationItemFactory):
-    '''
-    This concrete factory produces simulation items with random fake data
-    '''
+    """ This concrete factory produces simulation items with random fake data """
 
     def create_simulation_book(self):
         return SimulationBook(title=self.get_simulation_book_title())
@@ -104,7 +104,9 @@ class SimulationBook(SimulationBookInterface):
         self._title = value
 
 
-class SimulationUser:
+class SimulationUser(SimulationUserInterface, ObservableSubjectBase):
+
+    NotificationUserGiveBook = 'NotificationUserGiveBook'
 
     def __init__(self, name):
         log('Instantiated simulation User with name "%s"' %name)
@@ -112,19 +114,21 @@ class SimulationUser:
         self._own_books = []
         self.rating = 1
 
+    def give_own_book(self, book):
+        self.own_books.remove(book)
+        self.notify(SimulationUser.NotificationUserGiveBook)
+
     @property
     def own_books(self):
-        # log('User\'s \'%s\' books accessed' % self.name)
         return self._own_books
 
     @own_books.setter
     def own_books(self, value):
-        # log('User\'s \'%s\' books setted' % self.name)
         self._own_books = value
 
 
 class SimulationExchangePoint(SimulationExchangePointInterface):
-    ''' Respresentation of shared physical space where users can exchange their books '''
+    """ Representation of shared physical space where users can exchange their books """
 
     default_capacity = 10
 
@@ -160,7 +164,7 @@ class ExchangePointProxy(ExchangePointProxyInterface):
 
     def get_book(self):
         if self.proxied_point.stored_books:
-            return self.proxied_point.stored_books.pop()
+            return self.proxied_point.get_book()
 
     def put_book(self, book):
 
@@ -185,3 +189,48 @@ class ExchangePointProxy(ExchangePointProxyInterface):
     @property
     def stored_books(self):
         return self.proxied_point.stored_books
+
+
+class PublicLibrary:
+    """ Public Library has it's own books, inaccessible for exchange.
+        At the same time, distinct set of books for exchange can be stored there.
+    """
+
+    def __init__(self):
+        self.books_of_library = []
+        self.books_for_exchange = []
+
+
+class PublicLibraryAdapterInterface(metaclass=abc.ABCMeta):
+    """ Adapts PublicLibrary to be used as an ExchangePoint """
+
+    @abc.abstractmethod
+    def __init__(self, adaptee):
+        pass
+
+    @abc.abstractmethod
+    def get_book(self, book):
+        pass
+
+    @abc.abstractmethod
+    def put_book(self, book):
+        pass
+
+    @abc.abstractproperty
+    def stored_books(self):
+        pass
+
+
+class PublicLibraryAdapter(PublicLibraryAdapterInterface):
+
+    def __init__(self, adaptee):
+        self.adaptee = adaptee
+
+    def put_book(self, book):
+        self.adaptee.books_for_exchange.append(book)
+
+    def get_book(self):
+        return self.adaptee.books_for_exchange.pop()
+
+    def stored_books(self):
+        return self.adaptee.books_for_exchange
