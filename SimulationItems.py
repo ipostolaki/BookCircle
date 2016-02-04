@@ -91,7 +91,7 @@ class SimulationExchangePointInterface(metaclass=abc.ABCMeta):
 class SimulationBook(SimulationBookInterface):
 
     def __init__(self, title, owner=None):
-        log('Instantiated Book with title "%s"' %title)
+        log('Instantiated Book with title "%s"' % title)
         self._title = title
         self.owner = owner
 
@@ -111,7 +111,7 @@ class SimulationUser(SimulationUserInterface, ObservableSubjectBase, Mediator.Co
     NotificationUserGiveBook = 'NotificationUserGiveBook'
 
     def __init__(self, name):
-        log('Instantiated User with name "%s"' %name)
+        log('Instantiated User with name "%s"' % name)
         self.name = name
         self._own_books = []
         self.rating = 1
@@ -140,8 +140,7 @@ class SimulationExchangePoint(SimulationExchangePointInterface):
         self.capacity = point_capacity or SimulationExchangePoint.default_capacity
         self.successor = None
 
-        log('Instantiated Exchange Point with address "%s" and capacity %i'\
-            %(address, self.capacity))
+        log('Instantiated Exchange Point with address "%s" and capacity %i' % (address, self.capacity))
 
     def put_book(self, book):
         self.stored_books.append(book)
@@ -177,7 +176,7 @@ class ExchangePointProxy(ExchangePointProxyInterface):
         else:
             successor_point = self.proxied_point.successor
 
-            log('Trying exchange point successor %s' %successor_point)
+            log('Trying exchange point successor %s' % successor_point)
 
             if successor_point:
                 self.proxied_point = successor_point

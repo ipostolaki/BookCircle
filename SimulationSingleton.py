@@ -26,6 +26,7 @@ class Simulation(Single, Mediator.MediatorMixin):
 
     def __init__(self, users_count=None, max_books_per_user=None, exchange_points_count=None):
         # instantiating without args, returns new class instance with the same, shared, namespace
+        # this is one of several possible implementations of Singleton pattern in Python
         super().__init__()
 
         if users_count and max_books_per_user and exchange_points_count:
@@ -45,7 +46,6 @@ class Simulation(Single, Mediator.MediatorMixin):
             self.q_otp = queue.Queue()  # otp - from owners to exchange points
             self.persistence_strategy = None
             self.state = SimulationState.ReadyToRunState()
-
 
     def generate_items(self):
 
@@ -69,7 +69,6 @@ class Simulation(Single, Mediator.MediatorMixin):
 
         self.generate_exchange_points()
 
-
     def generate_exchange_points(self):
 
         # generate random exchange points
@@ -83,7 +82,6 @@ class Simulation(Single, Mediator.MediatorMixin):
             self.all_exchange_points.append(new_point)
             last_added_point = new_point
 
-
     def get_last_exchange_point(self):
         last_point = self.all_exchange_points[-1]
         point_proxy = ExchangePointProxy(proxied_point=last_point)
@@ -96,16 +94,13 @@ class Simulation(Single, Mediator.MediatorMixin):
     def set_persistence_strategy(self, persistence_strategy):
         self.persistence_strategy = persistence_strategy
 
-    def save_data(self, **args):
+    def save_data(self, **kwargs):
         if self.persistence_strategy:
-            self.persistence_strategy.save_data(self, **args)
+            self.persistence_strategy.save_data(self, **kwargs)
 
     def run(self):
-        print("Run at singleton")
         # Pattern: State
         self.state.run(self)
-
-
 
 
 class UserObserver(ObserverBase):

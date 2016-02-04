@@ -8,13 +8,13 @@ from StoredItemPrototype import StoredUserPrototype, StoredBookPrototype
 class SimulationPersistenceStrategy(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
-    def save_data(self, simulation, **args):
+    def save_data(self, simulation, **kwargs):
         pass
 
 
 class SimulationPersistenceFlaskSQL():
 
-    def save_data(self, simulation, **args):
+    def save_data(self, simulation, **kwargs):
 
         # Convert models for simulation into models for ORM
 
@@ -26,7 +26,7 @@ class SimulationPersistenceFlaskSQL():
             stored_book = StoredBookPrototype(sim_book).clone()
             flask_app.db.session.add(stored_book)
 
-        commit = args.get('commit', True)  # let's prevent real committing to the database
+        commit = kwargs.get('commit', True)  # lets prevent real committing to the database
 
         if commit == True:
             flask_app.db.session.commit()

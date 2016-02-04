@@ -33,7 +33,6 @@ class ExchangePointsHierarchyComposite(ExchangePointsHierarchyComponentInterface
     def remove_child(self, child):
         self.children.remove(child)
 
-
     def get_subordinated_books_count(self):
 
         book_count = 0

@@ -1,5 +1,6 @@
 import abc
 
+
 # Pattern: Bridge
 
 class ResourceAbstractClass(metaclass=abc.ABCMeta):
@@ -22,7 +23,6 @@ class ResourceImplementorInterface(metaclass=abc.ABCMeta):
 
 #### Book Resource
 
-
 class BookResource(ResourceAbstractClass):
 
     def __init__(self, title, owner, implementor):
@@ -32,7 +32,7 @@ class BookResource(ResourceAbstractClass):
 
     def get_resource_description(self):
         return self.implementor.get_resource_description(self)
-        
+
 
 class BookResourceImplementor(ResourceImplementorInterface):
 

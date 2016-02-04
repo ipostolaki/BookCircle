@@ -5,6 +5,7 @@ from BaseClasses import SimulationPersistenceStrategy
 
 from common_logger import log
 
+
 # Pattern: Facade
 
 class BookCircle:
@@ -23,9 +24,9 @@ class BookCircle:
     def run_web_app(self):
         flask_app.run()
 
-    def save_simulation_data(self, **args):
+    def save_simulation_data(self, **kwargs):
         # Save simulation objects to persistent storage
 
         sql_persistence = SimulationPersistenceStrategy.SimulationPersistenceFlaskSQL()
         self.simulation.set_persistence_strategy(sql_persistence)
-        self.simulation.save_data(**args)
+        self.simulation.save_data(**kwargs)

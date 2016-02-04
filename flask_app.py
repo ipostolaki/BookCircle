@@ -20,8 +20,7 @@ manager.add_command('db', MigrateCommand)
 
 @flask_app.route('/')
 def index():
-    return 'This flask app will be used to view simulation data stored in database'
-
+    return 'This flask app will be used to view simulation data stored in the database'
 
 
 #### ORM Storage Models
@@ -41,12 +40,5 @@ class StoredUser(db.Model):
     holded_books = db.relationship(StoredBook, backref='holder', lazy='dynamic', foreign_keys=[StoredBook.holder_id])
 
 
-
 if __name__ == '__main__':
     manager.run()
-
-
-
-    
-
-

@@ -2,6 +2,7 @@ import abc
 
 from common_logger import log
 
+
 # Pattern: Mediator
 
 class MediatorInterface(metaclass=abc.ABCMeta):
@@ -67,7 +68,7 @@ class MediatorMixin(MediatorInterface):
         self.colleagues.remove(colleague)
 
     def receive_message_from_colleague(self, message, sender):
-        log('Received message "%s" from colleague %s' %(message, sender))
+        log('Received message "%s" from colleague %s' % (message, sender))
 
 
 class ColleagueMixin(ColleagueInterface):
@@ -79,7 +80,7 @@ class ColleagueMixin(ColleagueInterface):
         self.mediator.receive_message_from_colleague(sender=self, message=message)
 
     def receive_message_from_mediator(self, message):
-        log('Received message "%s" from mediator' %message)
+        log('Received message "%s" from mediator' % message)
 
     def set_mediator(self, mediator):
         self.mediator = mediator
